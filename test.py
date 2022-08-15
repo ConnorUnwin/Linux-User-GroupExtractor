@@ -1,4 +1,5 @@
 import subprocess as sp
+import sys
 
 def get_username():
     try:
@@ -6,12 +7,12 @@ def get_username():
         if not username:
             raise ValueError("Empty input, Username need to be supplied!")
         else:
-            passwd_entry = sp.run(['grep', username, '/etc/passwd'], capture_output=True)
-            if passwd_entry.returncode == 1:
+            user_exists = sp.run(['grep',username, '/etc/passwd'], stdout=sp.DEVNULL)
+            if user_exists.returncode == 1:
                 print("User not found!")
-            elif passwd_entry.returncode == 0:
+            elif user_exists.returncode == 0:
                 print("User found!")
-                user_lst = passwd_entry.stdout.decode().split(':')
+                user_lst = sp.check_output(['grep',username, '/etc/passwd']).decode('utf-8').split(':')
             else:
                 print("Something went wrong!")
                 print(passwd_entry.returncode)
@@ -20,5 +21,10 @@ def get_username():
         username = input("Please enter a username: ")
     return user_lst
 
-data = get_username()
-print(data)
+if sys.version_info.major == 2:
+    print("Script needs to run with python3 at the moment")
+elif sys.version_info.major == 3:
+    data = get_username()
+    groups = sp.check_output(['groups',data[0]]).decode('utf-8').split()
+    print(groups[2:])
+    
